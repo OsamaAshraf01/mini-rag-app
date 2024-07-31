@@ -1,0 +1,2 @@
+This folder is made to store any "Logic" files. In other words, the functions that make
+operations and have the implementation.
