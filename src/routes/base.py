@@ -9,7 +9,12 @@ base_router = APIRouter(
 async def welcome(app_settings:Settings = Depends(get_settings)):  # Make the variable as a Depend to ensure that it is available before starting function's work
     app_name = app_settings.APP_NAME
     app_version = app_settings.APP_VERSION
+    allowed_files = app_settings.FILE_ALLOWED_TYPES
+    max_size = app_settings.FILE_MAX_SIZE
+
     return {
         "app_name" : app_name,
-        "app_verion" : app_version,   
+        "app_verion" : "v" + app_version,
+        "allowed files" : allowed_files,
+        "max size" : str(max_size) + "Mb"
     }
