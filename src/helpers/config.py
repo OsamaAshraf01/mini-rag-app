@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     OPENAI_KEY: str
     FILE_ALLOWED_TYPES: list
     FILE_MAX_SIZE: int
+    FILE_DEFAULT_CHUNCK_SIZE: int
 
     class Config:
         env_file = '.env'
