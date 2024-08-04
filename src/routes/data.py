@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from helpers.config import get_settings, Settings
 from controllers import DataController, ProjectController
 from models import ResponseSignal
-import os, aiofiles, logging
+import aiofiles, logging # type: ignore
 logger = logging.getLogger("uvicorn.error")
 
 data_router = APIRouter(
