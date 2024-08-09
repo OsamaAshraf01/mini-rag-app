@@ -1,7 +1,7 @@
 from fastapi import UploadFile
 from .BaseController import BaseController
 from .ProjectController import ProjectController
-from models import ResponseSignal
+from models import ResponseEnum
 import os, re
 
 class DataController(BaseController):
@@ -11,12 +11,12 @@ class DataController(BaseController):
 
     def validate_uploaded_file(self, file: UploadFile):
         if file.content_type not in self.app_settings.FILE_ALLOWED_TYPES:
-            return False, ResponseSignal.FILE_TYPE_NOT_SUPPORTED.value
+            return False, ResponseEnum.FILE_TYPE_NOT_SUPPORTED.value
         
         if file.size > self.app_settings.FILE_MAX_SIZE * 1024 * 1024:
-            return False, ResponseSignal.FILE_SIZE_EXEEDED.value
+            return False, ResponseEnum.FILE_SIZE_EXEEDED.value
         
-        return True, ResponseSignal.FILE_UPLOAD_SUCCESS.value
+        return True, ResponseEnum.FILE_UPLOAD_SUCCESS.value
     
 
     def get_clean_filename(self, original_name:str):

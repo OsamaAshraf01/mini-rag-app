@@ -1,9 +1,11 @@
-from fastapi import FastAPI, APIRouter, Depends, UploadFile, status
+from fastapi import APIRouter, Depends, UploadFile, status
 from fastapi.responses import JSONResponse
 from helpers.config import get_settings, Settings
-from controllers import DataController, ProjectController
-from models import ResponseSignal
+from controllers import DataController, ProcessController
+from models import ResponseEnum
+from .schemes.data import ProcessRequest
 import aiofiles, logging # type: ignore
+
 logger = logging.getLogger("uvicorn.error")
 
 data_router = APIRouter(
@@ -45,12 +47,39 @@ async def upload_data(project_id: str, file: UploadFile, app_settings: Settings 
         return JSONResponse(
             status_code= status.HTTP_400_BAD_REQUEST,
             content= {
-                "status" : ResponseSignal.FILE_UPLOAD_FAILED.value
+                "status" : ResponseEnum.FILE_UPLOAD_FAILED.value
             }
         )
 
     return {
-        "status" : ResponseSignal.FILE_UPLOAD_SUCCESS.value,
+        "status" : ResponseEnum.FILE_UPLOAD_SUCCESS.value,
         "file_id" : file_id
     }
     
+
+
+@data_router.post("/process/{project_id}")
+async def process_endpoint(project_id:str, process_request: ProcessRequest):
+    file_id = process_request.file_id
+    process_controller = ProcessController(project_id=project_id)
+
+    file_content = process_controller.get_file_content(file_id=file_id)
+    chunk_size = process_request.chunk_size
+    overlap_size = process_request.overlap_size
+    do_reset = process_request.do_reset
+
+
+    chunks = process_controller.process_file_content(file_content, chunk_size=chunk_size, overlap_size=overlap_size) 
+    
+    if chunks is None or len(chunks) == 0:
+        return JSONResponse(
+            status_code= status.HTTP_400_BAD_REQUEST,
+            content= {
+                "status" : ResponseEnum.PROCESSING_FAILED.value
+            }
+        )
+
+    return {
+        "status" : ResponseEnum.PROCESSING_SUCCESS.value,
+        "result" : chunks
+    }   
