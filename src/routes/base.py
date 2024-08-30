@@ -5,8 +5,8 @@ base_router = APIRouter(
     prefix='/api/v1'
 )
 
-# Depends function is very impoortant. It makes your application more efficient
-# It means that: Don't start in the logic of the function until you get a ressponse from
+# Depends function is very important. It makes your application more efficient
+# It means that: Don't start in the logic of the function until you get a response from
 # a specific another function.
 @base_router.get('/')
 async def welcome(app_settings:Settings = Depends(get_settings)):  # Make the variable as a Depend to ensure that it is available before starting function's work

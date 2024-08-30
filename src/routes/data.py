@@ -14,9 +14,9 @@ data_router = APIRouter(
 
 @data_router.post("/upload/{project_id}")
 async def upload_data(project_id: str, file: UploadFile, app_settings: Settings = Depends(get_settings)):
-    
     data_controller = DataController()
-    # Validate files
+
+    # Validate file
     is_valid, msg = data_controller.validate_uploaded_file(file)
 
     if not is_valid:
@@ -34,13 +34,13 @@ async def upload_data(project_id: str, file: UploadFile, app_settings: Settings 
         project_id=project_id
     )
 
-    # Use try to avoid problems
+    # use try to avoid problems
     try:
         async with aiofiles.open(file_path, "wb") as f:
             while chunck := await file.read(app_settings.FILE_DEFAULT_CHUNCK_SIZE):
                 await f.write(chunck)
     except Exception as e:
-        # using logger to avoid showing sensitive information to user. It will be in logger so the owner only
+        # use logger to avoid showing sensitive information to user. It will be in logger so the owner only
         # will be able to view and fix it
         logger.error(f"Error while uploading file: {e}")
 
