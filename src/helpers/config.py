@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI):
     app.mongo_connection = AsyncIOMotorClient(settings.MONGODB_URL)
     app.db_client = app.mongo_connection[settings.MONGODB_DATABASE]
 
-    yield  # Logic before yield is executed before start ans Logic after it will be executed after finish.
+    yield  # Logic before yield is executed before start and Logic after it will be executed after finish.
            # That is because of @asynccontextmanager (async context manager)
 
     app.mongo_connection.close()
