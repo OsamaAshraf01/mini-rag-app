@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, UploadFile, status
+from fastapi import APIRouter, Depends, UploadFile, status, Request
 from fastapi.responses import JSONResponse
 from helpers.config import get_settings, Settings
 from controllers import DataController, ProcessController
-from models import ResponseEnum
+from models import ResponseEnum, ProjectModel
 from .schemes.data import ProcessRequest
 import aiofiles, logging # type: ignore
 
@@ -13,7 +13,15 @@ data_router = APIRouter(
 )
 
 @data_router.post("/upload/{project_id}")
-async def upload_data(project_id: str, file: UploadFile, app_settings: Settings = Depends(get_settings)):
+async def upload_data(request: Request, project_id: str, file: UploadFile, app_settings: Settings = Depends(get_settings)):
+    # To get app object, we used parameter of Request type
+    # connect with database.
+    project_model = ProjectModel(
+        db= request.app.db
+    )
+    project = await project_model.get_project(project_id= project_id)
+    
+    
     data_controller = DataController()
 
     # Validate file
