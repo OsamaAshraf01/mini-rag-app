@@ -14,7 +14,7 @@ class ProjectModel(BaseDataModel):
         result = await self.collection.insert_one(project.model_dump()) # Converting pytdantic model into dictionary
         
         # assigning new id
-        project._id = result
+        project._id = result.inserted_id
 
         return project
     
