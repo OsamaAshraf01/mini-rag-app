@@ -1,10 +1,12 @@
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional
-from bson.obectid import ObjectId #type: ignore
+from bson.objectid import ObjectId 
 
 class Project(BaseModel):
     _id: Optional[ObjectId] # _id sometimes may not be in the request or response
     project_id: str = Field(..., min_length=1) # To validate length
+    # NOTE: _id is the id in database, while project_id is the id that we use to upload/process files
+
 
     @field_validator('project_id')
     def validate_project_id(cls, id: str):
