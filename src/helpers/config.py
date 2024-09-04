@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from motor.motor_asyncio import AsyncIOMotorClient # type: ignore
+from motor.motor_asyncio import AsyncIOMotorClient
 
 class Settings(BaseSettings):
     APP_NAME: str
@@ -25,10 +25,10 @@ def get_settings():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings = get_settings()
-    app.mongo_connection = AsyncIOMotorClient(settings.MONGODB_URL)
-    app.db_client = app.mongo_connection[settings.MONGODB_DATABASE]
+    app.client = AsyncIOMotorClient(settings.MONGODB_URL)
+    app.db = app.client[settings.MONGODB_DATABASE]
 
     yield  # Logic before yield is executed before start and Logic after it will be executed after finish.
            # That is because of @asynccontextmanager (async context manager)
 
-    app.mongo_connection.close()
+    app.client.close()
