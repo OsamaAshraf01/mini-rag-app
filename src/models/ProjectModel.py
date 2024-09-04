@@ -9,7 +9,7 @@ class ProjectModel(BaseDataModel):
         self.collection = self.db[DataBaseEnum.PROJECT_COLLECTION_NAME.value]
 
 
-    async def assign_database_id(self, project:Project) -> Project:
+    async def insert_project(self, project:Project) -> Project:
         # inserting a new record
         result = await self.collection.insert_one(project.model_dump()) # Converting pytdantic model into dictionary
         
@@ -29,7 +29,7 @@ class ProjectModel(BaseDataModel):
 
         if record is None:
             project = Project(project_id=project_id)
-            project = await self.assign_database_id(project=project)
+            project = await self.insert_project(project=project)
 
             return project
         
