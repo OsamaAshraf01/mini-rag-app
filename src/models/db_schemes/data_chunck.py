@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional
-from bson.obectid import ObjectId #type: ignore
+from bson.objectid import ObjectId 
 
 class DataChunck(BaseModel):
     _id: Optional[ObjectId] # _id sometimes may not be in the request or response 
@@ -10,4 +10,4 @@ class DataChunck(BaseModel):
     chunck_project_id: ObjectId
 
     class Config:
-        arbitary_types_allowed = True # To allow ObjectId type
+        arbitrary_types_allowed = True # To allow ObjectId type
