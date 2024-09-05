@@ -2,6 +2,7 @@ from .BaseDataModel import BaseDataModel
 from .enums.DataBaseEnum import DataBaseEnum
 from .db_schemes import Project
 from typing import List
+from bson.objectid import ObjectId
 
 class ProjectModel(BaseDataModel):
     def __init__(self, db):
@@ -9,14 +10,10 @@ class ProjectModel(BaseDataModel):
         self.collection = self.db[DataBaseEnum.PROJECT_COLLECTION_NAME.value]
 
 
-    async def insert_project(self, project:Project) -> Project:
+    async def insert_project(self, project:Project) -> ObjectId:
         # inserting a new record
-        result = await self.collection.insert_one(project.model_dump()) # Converting pytdantic model into dictionary
-        
-        # assigning new id
-        project._id = result.inserted_id
-
-        return project
+        result = await self.collection.insert_one(project.model_dump(by_alias=True, exclude_unset=True)) # Converting pytdantic model into dictionary    # by_alias to use aliases if found    # exclude_unset to exclude parameters is have a default value of None
+        return result.inserted_id
     
 
     async def get_project(self, project_id:str) -> Project:
@@ -29,7 +26,7 @@ class ProjectModel(BaseDataModel):
 
         if record is None:
             project = Project(project_id=project_id)
-            project = await self.insert_project(project=project)
+            project._id = await self.insert_project(project=project)
 
             return project
         
