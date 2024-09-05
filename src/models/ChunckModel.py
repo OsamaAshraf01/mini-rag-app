@@ -3,6 +3,7 @@ from .enums.DataBaseEnum import DataBaseEnum
 from .db_schemes import DataChunck
 from bson.objectid import ObjectId
 from pymongo import InsertOne
+from typing import List
 
 class ChunckModel(BaseDataModel):
     def __init__(self, db):
@@ -10,19 +11,17 @@ class ChunckModel(BaseDataModel):
         self.collection = self.db[DataBaseEnum.CHUNCK_COLLECTION_NAME.value]
 
 
-    async def insert_chunck(self, chunck:DataChunck) -> DataChunck:
+    async def insert_chunck(self, chunck:DataChunck) -> ObjectId:
         ''' This function is to insert a new chunck into the database
-            and returning an object of type DataChunck contining _id attribute.
+            and returning an object of type ObjectId.
             This function should be called only if chunck is not found in the database.
         '''
 
-        result = await self.collection.insert_one(chunck.model_dump()) # = chunck.dict()
-        chunck._id = result.inserted_id
-
-        return chunck
+        result = await self.collection.insert_one(chunck.model_dump(by_alias=True, exclude_unset=True)) # = chunck.dict()
+        return result.inserted_id
     
 
-    async def get_chunck(self, chunck_id:str) -> DataChunck | None:
+    async def get_chunck(self, chunck_id:str) -> DataChunck:
         record = await self.collection.find_one({
             "_id": ObjectId(chunck_id)
         })
@@ -49,12 +48,20 @@ class ChunckModel(BaseDataModel):
         return chuncks, total_pages
     
 
-    async def insert_many_chuncks(self, chuncks:list, batch_size:int = 100):
+    async def insert_many_chuncks(self, chuncks:List[DataChunck], batch_size:int = 100):
         for i in range(0, len(chuncks), batch_size):
             batch = chuncks[i:i+batch_size]
-            operations = [InsertOne(chunck.model_dump()) for chunck in batch]
+            operations = [InsertOne(chunck.model_dump(by_alias=True, exclude_unset=True)) for chunck in batch]
             
             await self.collection.bulk_write(operations)
         
-        # We used bilk write to make inserting more effecient than repeated insert_one
+        # We used bulk write to make inserting more effecient than repeated insert_one
         return len(chuncks)
+    
+
+    async def delete_chuncks_by_project_id(self, project_id: ObjectId):
+        result = await self.collection.delete_many({
+            "chunck_project_id": project_id
+        })
+
+        return result.deleted_count
