@@ -3,7 +3,7 @@ from typing import Optional
 from bson.objectid import ObjectId 
 
 class Project(BaseModel):
-    _id: Optional[ObjectId] # _id sometimes may not be in the request or response
+    id: Optional[ObjectId] = Field(None, alias="_id") # _id sometimes may not be in the request or response
     project_id: str = Field(..., min_length=1) # To validate length
     # NOTE: _id is the id in database, while project_id is the id that we use to upload/process files
 
@@ -17,4 +17,4 @@ class Project(BaseModel):
 
 
     class Config:
-        arbitary_types_allowed = True # To allow ObjectId type
+        arbitrary_types_allowed = True # To allow ObjectId type

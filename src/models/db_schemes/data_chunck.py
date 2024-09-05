@@ -3,7 +3,7 @@ from typing import Optional
 from bson.objectid import ObjectId 
 
 class DataChunck(BaseModel):
-    _id: Optional[ObjectId] # _id sometimes may not be in the request or response 
+    id: Optional[ObjectId] = Field(None, alias="_id") # _id sometimes may not be in the request or response 
     chunck_text: str = Field(..., min_length=1)
     chunck_metadata: dict
     chunck_order: int = Field(..., gt=0)  # order > 0
