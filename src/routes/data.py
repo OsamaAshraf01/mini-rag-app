@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, UploadFile, status, Request
 from fastapi.responses import JSONResponse
 from helpers.config import get_settings, Settings
 from controllers import DataController, ProcessController
-from models import ResponseEnum, ProjectModel
+from models import ResponseEnum, DataChunck, ProjectModel, ChunckModel
 from .schemes.data import ProcessRequest
-import aiofiles, logging # type: ignore
+import aiofiles, logging
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -67,7 +67,7 @@ async def upload_data(request: Request, project_id: str, file: UploadFile, app_s
 
 
 @data_router.post("/process/{project_id}")
-async def process_endpoint(project_id:str, process_request: ProcessRequest):
+async def process_endpoint(request:Request, project_id:str, process_request: ProcessRequest):
     file_id = process_request.file_id
     process_controller = ProcessController(project_id=project_id)
 
@@ -76,10 +76,15 @@ async def process_endpoint(project_id:str, process_request: ProcessRequest):
     overlap_size = process_request.overlap_size
     do_reset = process_request.do_reset
 
+    # get project from database
+    project_model = ProjectModel(
+        db= request.app.db
+    )
+    project = await project_model.get_project(project_id= project_id)
 
-    chunks = process_controller.process_file_content(file_content, chunk_size=chunk_size, overlap_size=overlap_size) 
+    chuncks = process_controller.process_file_content(file_content, chunk_size=chunk_size, overlap_size=overlap_size) 
     
-    if chunks is None or len(chunks) == 0:
+    if chuncks is None or len(chuncks) == 0:
         return JSONResponse(
             status_code= status.HTTP_400_BAD_REQUEST,
             content= {
@@ -87,7 +92,29 @@ async def process_endpoint(project_id:str, process_request: ProcessRequest):
             }
         )
 
+
+
+    # inserting chunck into database
+    chuncks = [
+        DataChunck(
+            chunck_text= chunck.page_content,
+            chunck_metadata= chunck.metadata,
+            chunck_order= i + 1,
+            chunck_project_id= project.id
+        )
+        for i, chunck in enumerate(chuncks)
+    ]
+    chunck_model = ChunckModel(
+        db= request.app.db
+    )
+
+    if do_reset == 1:
+        await chunck_model.delete_chuncks_by_project_id(project.id)
+    
+    records_count = await chunck_model.insert_many_chuncks(chuncks)
+
     return {
         "status" : ResponseEnum.PROCESSING_SUCCESS.value,
-        "result" : chunks
+        # "result" : chuncks,
+        "inserted_chuncks": records_count
     }   
