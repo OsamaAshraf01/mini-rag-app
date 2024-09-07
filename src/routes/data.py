@@ -140,7 +140,9 @@ async def process_endpoint(request:Request, project_id:str, process_request: Pro
         
         records_count += await chunck_model.insert_many_chuncks(chuncks)
 
-    _, total_chuncks = await chunck_model.get_all_chuncks(page=1, page_size=1)
+    total_chuncks = await chunck_model.collection.count_documents({
+        "chunck_project_id": project.id
+    })
     return {
         "status" : ResponseEnum.PROCESSING_SUCCESS.value,
         # "result" : chuncks,
