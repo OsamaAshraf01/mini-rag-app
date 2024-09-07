@@ -9,10 +9,6 @@ class ProjectModel(BaseDataModel):
         super().__init__(db=db)
         self.collection_name = DataBaseEnum.PROJECT_COLLECTION_NAME.value
 
-        all_collections = self.db.list_collection_names()
-        if self.collection_name in all_collections:
-            self.collection = self.db[self.collection_name]
-
     
     @classmethod
     async def create_instance(cls, db):

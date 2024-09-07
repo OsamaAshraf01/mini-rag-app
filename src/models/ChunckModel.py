@@ -9,10 +9,6 @@ class ChunckModel(BaseDataModel):
     def __init__(self, db):
         super().__init__(db=db)
         self.collection_name = DataBaseEnum.CHUNCK_COLLECTION_NAME.value
-        all_collections = self.db.list_collection_names()
-
-        if self.collection_name in all_collections:
-            self.collection = self.db[self.collection_name]
 
 
     @classmethod
