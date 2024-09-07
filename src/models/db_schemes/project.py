@@ -24,7 +24,7 @@ class Project(BaseModel):
     def get_indexes(cls):
         return [
             {
-                "key": [
+                "keys": [
                     ("project_id", 1)
                 ],
                 "name": "project_id_index_1",

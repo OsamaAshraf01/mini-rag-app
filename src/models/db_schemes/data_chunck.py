@@ -17,7 +17,7 @@ class DataChunck(BaseModel):
     def get_indexes(cls):
         return[
             {
-                "key": [
+                "keys": [
                     ("chunck_project_id", 1) # 1 for ascending, -1 for descending
                     # Add more keys here if will be used in the same condition
                 ],
