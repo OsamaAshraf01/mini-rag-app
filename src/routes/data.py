@@ -2,9 +2,10 @@ from fastapi import APIRouter, Depends, UploadFile, status, Request
 from fastapi.responses import JSONResponse
 from helpers.config import get_settings, Settings
 from controllers import DataController, ProcessController, ProjectController
-from models import ResponseEnum, DataChunck, ProjectModel, ChunckModel
+from models import ResponseEnum, DataChunck, ProjectModel, ChunckModel, AssetsModel
 from .schemes.data import ProcessRequest
 import aiofiles, logging, os
+from models.db_schemes import Asset
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -19,12 +20,9 @@ async def upload_data(request: Request, project_id: str, file: UploadFile, app_s
     project_model = await ProjectModel.create_instance(
         db= request.app.db
     )
-    project = await project_model.get_project(project_id= project_id)
     
-    
-    data_controller = DataController()
-
     # Validate file
+    data_controller = DataController()
     is_valid, msg = data_controller.validate_uploaded_file(file)
 
     if not is_valid:
@@ -58,6 +56,19 @@ async def upload_data(request: Request, project_id: str, file: UploadFile, app_s
                 "status" : ResponseEnum.FILE_UPLOAD_FAILED.value
             }
         )
+    
+    assets_model = AssetsModel(
+        db= request.app.db
+    )
+
+    project = await project_model.get_project(project_id)
+    asset = Asset(**{
+        "asset_project_id": project.id,
+        "asset_type": file_id.split('.')[-1],
+        "asset_name": file_id
+    })
+
+    asset.id = await assets_model.insert_asset(asset)
 
     return {
         "status" : ResponseEnum.FILE_UPLOAD_SUCCESS.value,
