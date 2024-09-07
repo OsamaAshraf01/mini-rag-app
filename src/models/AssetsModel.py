@@ -29,16 +29,16 @@ class AssetsModel(BaseDataModel):
         return Asset(**document)
 
 
-    async def get_assets_by_project_id(self, project_id:str, page:int=1, page_size:int=10) -> List[Asset]:
+    async def get_assets_by_project_id(self, asset_project_id:ObjectId, page:int=1, page_size:int=10) -> List[Asset]:
         total_records = await self.collection.count_documents({
-            "asset_project_id": ObjectId(project_id)
+            "asset_project_id": asset_project_id
         })
 
         total_pages = total_records // page_size + int(total_records % page_size != 0)
         skipped_count = (page - 1) * page_size
 
         cursor = self.collection.find({
-            "asset_project_id": ObjectId(project_id)
+            "asset_project_id": asset_project_id
         }).skip(skipped_count).limit(page_size)
 
         assets = []
