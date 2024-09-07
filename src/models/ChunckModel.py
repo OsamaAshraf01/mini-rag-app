@@ -8,7 +8,18 @@ from typing import List
 class ChunckModel(BaseDataModel):
     def __init__(self, db):
         super().__init__(db=db)
-        self.collection = self.db[DataBaseEnum.CHUNCK_COLLECTION_NAME.value]
+        self.collection_name = DataBaseEnum.CHUNCK_COLLECTION_NAME.value
+        all_collections = self.db.list_collection_names()
+
+        if self.collection_name in all_collections:
+            self.collection = self.db[self.collection_name]
+
+
+    @classmethod
+    async def create_instance(cls, db):
+        instance = cls(db)
+        await instance.init_collection(DataChunck.get_indexes())
+        return instance
 
 
     async def insert_chunck(self, chunck:DataChunck) -> ObjectId:

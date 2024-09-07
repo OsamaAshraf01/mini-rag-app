@@ -7,36 +7,18 @@ from bson.objectid import ObjectId
 class ProjectModel(BaseDataModel):
     def __init__(self, db):
         super().__init__(db=db)
+        self.collection_name = DataBaseEnum.PROJECT_COLLECTION_NAME.value
 
         all_collections = self.db.list_collection_names()
-        collection_name = DataBaseEnum.PROJECT_COLLECTION_NAME.value
-
-        if collection_name in all_collections:
-            self.collection = self.db[DataBaseEnum.PROJECT_COLLECTION_NAME.value]
+        if self.collection_name in all_collections:
+            self.collection = self.db[self.collection_name]
 
     
     @classmethod
     async def create_instance(cls, db):
         instance = cls(db)
-        await instance.init_collection()
+        await instance.init_collection(Project.get_indexes())
         return instance
-
-
-    async def init_collection(self):
-        all_collections = await self.db.list_collection_names()
-        target_collection_name = DataBaseEnum.PROJECT_COLLECTION_NAME.value
-
-        if target_collection_name not in all_collections:
-            self.collection = self.db[DataBaseEnum.PROJECT_COLLECTION_NAME.value]
-            indexes = Project.get_indexes()
-
-            for index in indexes:
-                await self.collection.create_index(**index)
-                # await self.collection.create_index(
-                #     index["key"],
-                #     name= index["name"],
-                #     unique= index["unique"]
-                # )
 
 
     async def insert_project(self, project:Project) -> ObjectId:
