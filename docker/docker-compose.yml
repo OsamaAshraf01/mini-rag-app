@@ -11,8 +11,8 @@ services:
       - mongodata:/data/db
 
     environment:
-      - MONGO_INITDB_ROOT_USERNAME= ${ROOT_USERNAME}
-      - MONGO_INITDB_ROOT_PASSWORD= ${ROOT_PASSWORD}
+      - MONGO_INITDB_ROOT_USERNAME=${ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${ROOT_PASSWORD}
     
     networks:
       - backend
