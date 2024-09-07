@@ -45,6 +45,12 @@ class ChunckModel(BaseDataModel):
         return DataChunck(**record)
 
 
+    async def get_chuncks_by_project_id(self, project_id:ObjectId):
+        return self.collection.find({
+            "chunck_project_id": project_id
+        })
+
+
     async def get_all_chuncks(self, page:int = 1, page_size:int = 10):
         total_records = await self.collection.count_documents({})
         total_pages = total_records // page_size + int(total_records % page_size != 0)
