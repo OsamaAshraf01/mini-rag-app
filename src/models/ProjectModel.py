@@ -28,7 +28,7 @@ class ProjectModel(BaseDataModel):
 
         if record is None:
             project = Project(project_id=project_id)
-            project._id = await self.insert_project(project=project)
+            project.id = await self.insert_project(project=project)
 
             return project
         
