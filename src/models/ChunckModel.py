@@ -28,6 +28,17 @@ class ChunckModel(BaseDataModel):
         return result.inserted_id
     
 
+    async def insert_many_chuncks(self, chuncks:List[DataChunck], batch_size:int = 100):
+        for i in range(0, len(chuncks), batch_size):
+            batch = chuncks[i:i+batch_size]
+            operations = [InsertOne(chunck.model_dump(by_alias=True, exclude_unset=True)) for chunck in batch]
+            
+            await self.collection.bulk_write(operations)
+        
+        # We used bulk write to make inserting more effecient than repeated insert_one
+        return len(chuncks)
+    
+
     async def get_chunck(self, chunck_id:str) -> DataChunck:
         record = await self.collection.find_one({
             "_id": ObjectId(chunck_id)
@@ -53,17 +64,6 @@ class ChunckModel(BaseDataModel):
             )
 
         return chuncks, total_pages
-    
-
-    async def insert_many_chuncks(self, chuncks:List[DataChunck], batch_size:int = 100):
-        for i in range(0, len(chuncks), batch_size):
-            batch = chuncks[i:i+batch_size]
-            operations = [InsertOne(chunck.model_dump(by_alias=True, exclude_unset=True)) for chunck in batch]
-            
-            await self.collection.bulk_write(operations)
-        
-        # We used bulk write to make inserting more effecient than repeated insert_one
-        return len(chuncks)
     
 
     async def delete_chuncks_by_project_id(self, project_id: ObjectId):
