@@ -11,3 +11,18 @@ class DataChunck(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True # To allow ObjectId type
+
+
+    @classmethod
+    def get_indexes(cls):
+        return[
+            {
+                "key": [
+                    ("chunck_project_id", 1) # 1 for ascending, -1 for descending
+                    # Add more keys here if will be used in the same condition
+                ],
+                "name": "chunck_project_id_index_1",
+                "unique": False
+            },
+            # Add more keys here if will be used in separate conditions
+        ]
