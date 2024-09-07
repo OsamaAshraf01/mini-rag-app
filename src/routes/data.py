@@ -7,6 +7,7 @@ from .schemes.data import ProcessRequest
 import aiofiles, logging, os
 from models.db_schemes import Asset
 from models.enums import AssetTypeEnum
+from datetime import datetime
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -69,6 +70,7 @@ async def upload_data(request: Request, project_id: str, file: UploadFile, app_s
         asset_type= AssetTypeEnum.FILE.value + '/' + file_extension,
         asset_name= file_id,
         asset_size= os.path.getsize(file_path),
+        asset_pushed_at= datetime.now()
     )
 
     asset.id = await assets_model.insert_asset(asset)
