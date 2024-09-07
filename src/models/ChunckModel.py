@@ -6,16 +6,11 @@ from pymongo import InsertOne
 from typing import List
 
 class ChunckModel(BaseDataModel):
+    indexes = DataChunck.get_indexes()
+
     def __init__(self, db):
-        super().__init__(db=db)
         self.collection_name = DataBaseEnum.CHUNCK_COLLECTION_NAME.value
-
-
-    @classmethod
-    async def create_instance(cls, db):
-        instance = cls(db)
-        await instance.init_collection(DataChunck.get_indexes())
-        return instance
+        super().__init__(db=db)
 
 
     async def insert_chunck(self, chunck:DataChunck) -> ObjectId:
@@ -51,7 +46,7 @@ class ChunckModel(BaseDataModel):
 
 
     async def get_all_chuncks(self, page:int = 1, page_size:int = 10):
-        total_records = self.collection.count_documents({})
+        total_records = await self.collection.count_documents({})
         total_pages = total_records // page_size + int(total_records % page_size != 0)
         skipped_count = (page - 1) * page_size
 

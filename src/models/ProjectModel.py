@@ -5,16 +5,11 @@ from typing import List
 from bson.objectid import ObjectId
 
 class ProjectModel(BaseDataModel):
-    def __init__(self, db):
-        super().__init__(db=db)
-        self.collection_name = DataBaseEnum.PROJECT_COLLECTION_NAME.value
+    indexes = Project.get_indexes()
 
-    
-    @classmethod
-    async def create_instance(cls, db):
-        instance = cls(db)
-        await instance.init_collection(Project.get_indexes())
-        return instance
+    def __init__(self, db):
+        self.collection_name = DataBaseEnum.PROJECT_COLLECTION_NAME.value
+        super().__init__(db=db)
 
 
     async def insert_project(self, project:Project) -> ObjectId:
@@ -41,7 +36,7 @@ class ProjectModel(BaseDataModel):
     
 
     async def get_all_projects(self, page:int=1, page_size:int=10) -> List[Project]:
-        total_records = self.collection.count_documents({}) # {} means count all
+        total_records = await self.collection.count_documents({}) # {} means count all
         total_pages = total_records // page_size + int(total_records % page != 0)
         skipped_count = (page - 1) * page_size
         

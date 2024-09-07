@@ -6,10 +6,11 @@ from typing import List
 
 
 class AssetsModel(BaseDataModel):
+    indexes = Asset.get_indexes()
+
     def __init__(self, db):
-        super().__init__(db)
         self.collection_name = DataBaseEnum.ASSETS_COLLECTION_NAME.value
-        self.collection = self.db[self.collection_name]
+        super().__init__(db)
 
     
     async def insert_asset(self, asset:Asset) -> ObjectId:
@@ -36,7 +37,7 @@ class AssetsModel(BaseDataModel):
         total_pages = total_records // page_size + int(total_records % page_size != 0)
         skipped_count = (page - 1) * page_size
 
-        cursor = await self.collection.find({
+        cursor = self.collection.find({
             "asset_project_id": ObjectId(project_id)
         }).skip(skipped_count).limit(page_size)
 
