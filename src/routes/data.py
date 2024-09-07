@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, UploadFile, status, Request
 from fastapi.responses import JSONResponse
 from helpers.config import get_settings, Settings
-from controllers import DataController, ProcessController
+from controllers import DataController, ProcessController, ProjectController
 from models import ResponseEnum, DataChunck, ProjectModel, ChunckModel
 from .schemes.data import ProcessRequest
-import aiofiles, logging
+import aiofiles, logging, os
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -70,6 +70,18 @@ async def upload_data(request: Request, project_id: str, file: UploadFile, app_s
 async def process_endpoint(request:Request, project_id:str, process_request: ProcessRequest):
     file_id = process_request.file_id
     process_controller = ProcessController(project_id=project_id)
+    project_controller = ProjectController()
+
+    project_path = project_controller.get_project_path(project_id=project_id)
+    file_dir = os.path.join(project_path, file_id)
+    if not os.path.exists(file_dir):
+        return JSONResponse(
+            status_code= status.HTTP_400_BAD_REQUEST,
+            content={
+                "error_mesaage" : ResponseEnum.FILE_NOT_FOUND.value
+            }
+        )
+
 
     file_content = process_controller.get_file_content(file_id=file_id)
     chunk_size = process_request.chunk_size
