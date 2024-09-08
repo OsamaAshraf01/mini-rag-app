@@ -2,13 +2,12 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from bson.objectid import ObjectId
 from datetime import datetime
-from typing import Union
 
 class Asset(BaseModel):
     id: Optional[ObjectId] = Field(default=None, alias="_id")
     asset_project_id: ObjectId
     asset_type: str = Field(..., min_length=1) # ... means required field
-    asset_extension: Union[str, None] = Field(default=None)
+    asset_extension: str = Field(default=None)
     asset_name: str = Field(..., min_length=1)
     asset_size: int = Field(default=None, ge=0)
     asset_pushed_at: datetime = Field(default=datetime.now())
