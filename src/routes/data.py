@@ -112,10 +112,14 @@ async def process_endpoint(request:Request, project_id:str, process_request: Pro
         await chunck_model.delete_chuncks_by_project_id(project.id)
 
     records_count = 0
+    processed_files = 0
     for file_id in files_names:
         file_content = process_controller.get_file_content(file_id=file_id)
+        if file_content is None:
+            logger.error(f"File \"{file_id}\" not found.")
+            continue
+
         chuncks = process_controller.process_file_content(file_content, chunk_size=chunk_size, overlap_size=overlap_size) 
-        
         if chuncks is None or len(chuncks) == 0:
             return JSONResponse(
                 status_code= status.HTTP_400_BAD_REQUEST,
@@ -138,13 +142,15 @@ async def process_endpoint(request:Request, project_id:str, process_request: Pro
         ]
         
         records_count += await chunck_model.insert_many_chuncks(chuncks)
+        processed_files += 1
 
     total_chuncks = await chunck_model.collection.count_documents({
         "chunck_project_id": project.id
     })
     return {
-        "status" : ResponseEnum.PROCESSING_SUCCESS.value,
+        "status": ResponseEnum.PROCESSING_SUCCESS.value,
+        "processed_files": processed_files,
         # "result" : chuncks,
         "inserted_chuncks": records_count,
-        "total_chuncks": total_chuncks
+        "total_project_chuncks": total_chuncks
     }   
