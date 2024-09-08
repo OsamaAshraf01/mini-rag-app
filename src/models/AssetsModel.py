@@ -5,7 +5,7 @@ from bson.objectid import ObjectId
 from typing import List
 from fastapi.responses import JSONResponse
 from fastapi import status
-from .enums import ResponseEnum
+from .enums import ResponseEnum, AssetTypeEnum
 
 
 class AssetsModel(BaseDataModel):
@@ -32,9 +32,12 @@ class AssetsModel(BaseDataModel):
         return Asset(**document)
 
 
-    async def get_assets_by_project_id(self, asset_project_id:ObjectId, page:int=1, page_size:int=10) -> List[Asset]:
+    async def get_assets_by_project_id(self, asset_project_id:ObjectId, asset_types:List[str], page:int=1, page_size:int=10) -> List[Asset]:
         total_records = await self.collection.count_documents({
-            "asset_project_id": asset_project_id
+            "asset_project_id": asset_project_id,
+            "$or": [
+                {"asset_type" : type} for type in asset_types
+            ]
         })
 
         total_pages = total_records // page_size + int(total_records % page_size != 0)
@@ -57,7 +60,12 @@ class AssetsModel(BaseDataModel):
             "asset_project_id": asset_project_id
         }) 
 
-        assets, _ = await self.get_assets_by_project_id(asset_project_id=asset_project_id, page=1, page_size=total_records)
+        assets, _ = await self.get_assets_by_project_id(
+            asset_project_id=asset_project_id, 
+            asset_types=[AssetTypeEnum.FILE.value],
+            page=1, 
+            page_size=total_records
+        )
 
         return assets
 
