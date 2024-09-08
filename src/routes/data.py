@@ -102,21 +102,21 @@ async def process_endpoint(request:Request, project_id:str, process_request: Pro
             return response
         
         asset = await assets_model.get_asset(request_file_id)
-        files_names = [asset.asset_name]
+        all_assets = [asset]
     else:
         # get files from all pages
-        all_files = await assets_model.get_all_project_assets(asset_project_id=project.id)
-        files_names = [asset.asset_name for asset in all_files]
+        all_assets = await assets_model.get_all_project_assets(asset_project_id=project.id)
     
     if do_reset == 1:
         await chunck_model.delete_chuncks_by_project_id(project.id)
 
     records_count = 0
     processed_files = 0
-    for file_id in files_names:
+    for asset in all_assets:
+        file_id = asset.asset_name
         file_content = process_controller.get_file_content(file_id=file_id)
         if file_content is None:
-            logger.error(f"File \"{file_id}\" not found.")
+            logger.error(f"File not exist: file name \"{file_id}\".")
             continue
 
         chuncks = process_controller.process_file_content(file_content, chunk_size=chunk_size, overlap_size=overlap_size) 
@@ -136,7 +136,8 @@ async def process_endpoint(request:Request, project_id:str, process_request: Pro
                 chunck_text= chunck.page_content,
                 chunck_metadata= chunck.metadata,
                 chunck_order= i + 1,
-                chunck_project_id= project.id
+                chunck_project_id= project.id,
+                chunck_asset_id= asset.id
             )
             for i, chunck in enumerate(chuncks)
         ]
