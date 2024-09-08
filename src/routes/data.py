@@ -66,7 +66,8 @@ async def upload_data(request: Request, project_id: str, file: UploadFile, app_s
     project = await project_model.get_project(project_id)
     asset = Asset(
         asset_project_id= project.id,
-        asset_type= AssetTypeEnum.FILE.value + '/' + file_extension,
+        asset_type= AssetTypeEnum.FILE.value,
+        asset_extension= file_extension,
         asset_name= file_id,
         asset_size= os.path.getsize(file_path),
         asset_pushed_at= datetime.now()
@@ -95,9 +96,6 @@ async def process_endpoint(request:Request, project_id:str, process_request: Pro
     overlap_size = process_request.overlap_size
     do_reset = process_request.do_reset
 
-    if do_reset == 1:
-        await chunck_model.delete_chuncks_by_project_id(project.id)
-
     if request_file_id is not None:
         response = await assets_model.validate_file_id(request_file_id)
         if isinstance(response, JSONResponse):
@@ -110,6 +108,9 @@ async def process_endpoint(request:Request, project_id:str, process_request: Pro
         all_files = await assets_model.get_all_project_assets(asset_project_id=project.id)
         files_names = [asset.asset_name for asset in all_files]
     
+    if do_reset == 1:
+        await chunck_model.delete_chuncks_by_project_id(project.id)
+
     records_count = 0
     for file_id in files_names:
         file_content = process_controller.get_file_content(file_id=file_id)
