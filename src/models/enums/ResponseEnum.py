@@ -10,3 +10,4 @@ class ResponseEnum(Enum):
     PROCESSING_FAILED = "processing_failed"
     FILE_NOT_FOUND = "file_not_found"
 
+    INVALID_ID = "invalid_file_id"

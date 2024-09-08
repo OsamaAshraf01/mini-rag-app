@@ -31,7 +31,6 @@ async def upload_data(request: Request, project_id: str, file: UploadFile, app_s
         return JSONResponse(
             status_code = status.HTTP_400_BAD_REQUEST,
             content = {
-                "upload_status" : is_valid,
                 "Error" : msg
             }
         )
@@ -85,17 +84,13 @@ async def upload_data(request: Request, project_id: str, file: UploadFile, app_s
 @data_router.post("/process/{project_id}")
 async def process_endpoint(request:Request, project_id:str, process_request: ProcessRequest):
     process_controller = ProcessController(project_id=project_id)
-    assets_model = await AssetsModel.create_instance(
-        db= request.app.db
-    )
-    chunck_model = await ChunckModel.create_instance(
-            db= request.app.db
-    )
-    # get project from database
-    project_model = await ProjectModel.create_instance(
-        db= request.app.db
-    )
+    assets_model = await AssetsModel.create_instance(db= request.app.db)
+    chunck_model = await ChunckModel.create_instance(db= request.app.db)
+    project_model = await ProjectModel.create_instance(db= request.app.db)
+
     project = await project_model.get_project(project_id= project_id)
+
+    request_file_id = process_request.file_id
     chunk_size = process_request.chunk_size
     overlap_size = process_request.overlap_size
     do_reset = process_request.do_reset
@@ -103,16 +98,19 @@ async def process_endpoint(request:Request, project_id:str, process_request: Pro
     if do_reset == 1:
         await chunck_model.delete_chuncks_by_project_id(project.id)
 
-    # get files from all pages
-    all_files = []
-    _, total_pages = await assets_model.get_assets_by_project_id(asset_project_id=project.id)
-    for i in range(total_pages):
-        files, _ = await assets_model.get_assets_by_project_id(asset_project_id=project.id, page=i+1)
-        all_files += files
+    if request_file_id is not None:
+        response = await assets_model.validate_file_id(request_file_id)
+        if isinstance(response, JSONResponse):
+            return response
+        
+        asset = await assets_model.get_asset(request_file_id)
+        files_names = [asset.asset_name]
+    else:
+        # get files from all pages
+        all_files = await assets_model.get_all_project_assets(asset_project_id=project.id)
+        files_names = [asset.asset_name for asset in all_files]
     
-    files_names = [asset.asset_name for asset in all_files]
     records_count = 0
-
     for file_id in files_names:
         file_content = process_controller.get_file_content(file_id=file_id)
         chuncks = process_controller.process_file_content(file_content, chunk_size=chunk_size, overlap_size=overlap_size) 

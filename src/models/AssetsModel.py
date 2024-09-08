@@ -3,6 +3,9 @@ from .enums import DataBaseEnum
 from .db_schemes import Asset
 from bson.objectid import ObjectId
 from typing import List
+from fastapi.responses import JSONResponse
+from fastapi import status
+from .enums import ResponseEnum
 
 
 class AssetsModel(BaseDataModel):
@@ -47,4 +50,32 @@ class AssetsModel(BaseDataModel):
             assets.append(Asset(**document))
 
         return assets, total_pages
-        
+    
+
+    async def get_all_project_assets(self, asset_project_id:ObjectId) -> List[Asset]:
+        total_records = await self.collection.count_documents({
+            "asset_project_id": asset_project_id
+        }) 
+
+        assets, _ = await self.get_assets_by_project_id(asset_project_id=asset_project_id, page=1, page_size=total_records)
+
+        return assets
+
+
+    async def validate_file_id(self, asset_id):
+        if not ObjectId.is_valid(asset_id):
+            return JSONResponse(
+                status_code= status.HTTP_400_BAD_REQUEST,
+                content= {
+                    "status" : ResponseEnum.INVALID_ID.value
+                }
+            )
+        asset = await self.get_asset(asset_id)
+
+        if asset is None:
+            return JSONResponse(
+                status_code= status.HTTP_400_BAD_REQUEST,
+                content= {
+                    "status" : ResponseEnum.FILE_NOT_FOUND.value
+                }
+            )
