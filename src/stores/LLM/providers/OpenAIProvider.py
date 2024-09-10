@@ -68,7 +68,7 @@ class OpenAIProvider(LLMInterface):
 
 
 
-    def embed_text(self, text: str, document_type: str):
+    def embed_text(self, text: str, document_type: str = None):
         
         if not self.client:
             self.logger.error("OpenAI Client was not set.")
@@ -93,10 +93,11 @@ class OpenAIProvider(LLMInterface):
     def construct_prompt(self, prompt: str, role: str):
         return {
             "role": role,
-            "content": prompt
+            "content": self.process_text(prompt)
         }
 
 
-
+    def process_text(self, text:str):
+        return text.strip()[:self.default_input_max_character].strip()
 
 
