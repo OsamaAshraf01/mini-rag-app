@@ -1,18 +1,18 @@
-from ...LLMInterface import LLMInterface
-from ...LLMEnum import OpenAIEnum
+from ..LLMInterface import LLMInterface
+from ..LLMEnums import OpenAIEnum
 from openai import OpenAI
 import logging
 
 class OpenAIProvider(LLMInterface):
     def __init__(self, api_key: str, api_url: str=None,
-                       default_input_max_character: int = 1000,
+                       default_input_max_characters: int = 1000,
                        default_generation_max_output_tokens: int = 1000,
                        default_generation_temprature: float = 0.1):
         
         self.api_key = api_key
         self.api_url = api_url
 
-        self.default_input_max_character = default_input_max_character
+        self.default_input_max_characters = default_input_max_characters
         self.default_generation_max_output_tokens = default_generation_max_output_tokens
         self.default_generation_temprature = default_generation_temprature
 
@@ -67,7 +67,6 @@ class OpenAIProvider(LLMInterface):
         return response.choices[0].message["content"]
 
 
-
     def embed_text(self, text: str, document_type: str = None):
         
         if not self.client:
@@ -80,7 +79,7 @@ class OpenAIProvider(LLMInterface):
         
         response = self.client.embeddings.create(
             model= self.embedding_model_id,
-            input= text
+            input= self.process_text(text)
         )
 
         if not response or not response.data or len(response.data) == 0 or not response.data[0].embedding:
@@ -98,6 +97,6 @@ class OpenAIProvider(LLMInterface):
 
 
     def process_text(self, text:str):
-        return text.strip()[:self.default_input_max_character].strip()
+        return text.strip()[:self.default_input_max_characters].strip()
 
 
