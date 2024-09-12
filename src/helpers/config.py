@@ -2,7 +2,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from motor.motor_asyncio import AsyncIOMotorClient
-from stores.LLM.LLMProviderFactory import LLMProviderFactory
 
 class Settings(BaseSettings):
     APP_NAME: str
@@ -39,6 +38,8 @@ def get_settings():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    from stores.LLM.LLMProviderFactory import LLMProviderFactory
+    
     settings = get_settings()
     app.client = AsyncIOMotorClient(settings.MONGODB_URL)
     app.db = app.client[settings.MONGODB_DATABASE]
@@ -47,11 +48,11 @@ async def lifespan(app: FastAPI):
 
     # Generation Client
     app.generation_client = llm_provider_factory.create(settings.GENERATION_BACKEND)
-    app.generation_client.set_embedding_model(model_id= settings.GENERATION_MODEL_ID, embedding_size= settings.EMBEDDING_SIZE)
+    app.generation_client.set_generation_model(model_id= settings.GENERATION_MODEL_ID)
 
     # Embedding Client
     app.embedding_client = llm_provider_factory.create(settings.EMBEDDING_BACKEND)
-    app.embedding_client.set_embedding_model(model_id= settings.EMBEDDING_MODEL_ID)
+    app.embedding_client.set_embedding_model(model_id= settings.EMBEDDING_MODEL_ID, embedding_size= settings.EMBEDDING_SIZE)
 
     yield  # Logic before yield is executed before start and Logic after it will be executed after finish.
            # That is because of @asynccontextmanager (async context manager)
