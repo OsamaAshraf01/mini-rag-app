@@ -42,22 +42,31 @@ def get_settings():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     from stores.LLM.LLMProviderFactory import LLMProviderFactory
+    from stores.vectordb.VectorDBProviderFactory import VectorDBProviderFactory
     
     settings = get_settings()
     app.client = AsyncIOMotorClient(settings.MONGODB_URL)
     app.db = app.client[settings.MONGODB_DATABASE]
 
-    llm_provider_factory = LLMProviderFactory(settings)
+    llm_provider_factory = LLMProviderFactory(config= settings)
 
     # Generation Client
-    app.generation_client = llm_provider_factory.create(settings.GENERATION_BACKEND)
+    app.generation_client = llm_provider_factory.create(provider= settings.GENERATION_BACKEND)
     app.generation_client.set_generation_model(model_id= settings.GENERATION_MODEL_ID)
 
     # Embedding Client
-    app.embedding_client = llm_provider_factory.create(settings.EMBEDDING_BACKEND)
+    app.embedding_client = llm_provider_factory.create(provider= settings.EMBEDDING_BACKEND)
     app.embedding_client.set_embedding_model(model_id= settings.EMBEDDING_MODEL_ID, embedding_size= settings.EMBEDDING_SIZE)
+
+
+
+    # Vector DB Factory
+    vsctor_db_factory = VectorDBProviderFactory(config= settings)
+    app.vector_db_provider = vsctor_db_factory.create(db_provider_name= settings.VECTOR_DB_BACKEND)
+    app.vector_db_provider.connect()
 
     yield  # Logic before yield is executed before start and Logic after it will be executed after finish.
            # That is because of @asynccontextmanager (async context manager)
 
+    app.vector_db_provider.disconnect()
     app.client.close()
