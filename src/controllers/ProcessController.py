@@ -3,8 +3,8 @@ from .ProjectController import ProjectController
 from models import ResponseEnum
 from fastapi import status
 from fastapi.responses import JSONResponse
-from langchain_community.document_loaders import TextLoader, PyMuPDFLoader # type: ignore
-from langchain_text_splitters import RecursiveCharacterTextSplitter # type: ignore
+from langchain_community.document_loaders import TextLoader, PyMuPDFLoader 
+from langchain_text_splitters import RecursiveCharacterTextSplitter 
 import os
 from models import ProcessingEnum
 
