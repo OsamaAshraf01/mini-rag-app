@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, UploadFile, status, Request
 from fastapi.responses import JSONResponse
+from helpers import JSONResponses
 from helpers.config import get_settings, Settings
 from controllers import DataController, ProcessController, ProjectController
 from models import ResponseEnum, DataChunck, ProjectModel, ChunckModel, AssetsModel
@@ -12,7 +13,8 @@ from datetime import datetime
 logger = logging.getLogger("uvicorn.error")
 
 data_router = APIRouter(
-    prefix='/api/v1/data'
+    prefix='/api/v1/data',
+    tags= ["api_v1", "data"]
 )
 
 @data_router.post("/upload/{project_id}")
@@ -28,12 +30,7 @@ async def upload_data(request: Request, project_id: str, file: UploadFile, app_s
     is_valid, msg = data_controller.validate_uploaded_file(file)
 
     if not is_valid:
-        return JSONResponse(
-            status_code = status.HTTP_400_BAD_REQUEST,
-            content = {
-                "Error" : msg
-            }
-        )
+        return JSONResponses.BAD_REQUEST(msg= msg)
 
     # Generate unique filename to avoid writing over exisitng files and to remove unwanted characters
     file_path, file_id = data_controller.generate_unique_filepath(
@@ -51,12 +48,7 @@ async def upload_data(request: Request, project_id: str, file: UploadFile, app_s
         # will be able to view and fix it
         logger.error(f"Error while uploading file: {e}")
 
-        return JSONResponse(
-            status_code= status.HTTP_400_BAD_REQUEST,
-            content= {
-                "status" : ResponseEnum.FILE_UPLOAD_FAILED.value
-            }
-        )
+        return JSONResponses.BAD_REQUEST(msg= ResponseEnum.FILE_UPLOAD_FAILED.value)
     
     assets_model = await AssetsModel.create_instance(
         db= request.app.db
@@ -108,7 +100,7 @@ async def process_endpoint(request:Request, project_id:str, process_request: Pro
         all_assets = await assets_model.get_all_project_assets(asset_project_id=project.id)
     
     if do_reset == 1:
-        await chunck_model.delete_chuncks_by_project_id(project.id)
+        await chunck_model.delete_project_chuncks(project_id= project.id)
 
     records_count = 0
     processed_files = 0
@@ -121,12 +113,7 @@ async def process_endpoint(request:Request, project_id:str, process_request: Pro
 
         chuncks = process_controller.process_file_content(file_content, chunk_size=chunk_size, overlap_size=overlap_size) 
         if chuncks is None or len(chuncks) == 0:
-            return JSONResponse(
-                status_code= status.HTTP_400_BAD_REQUEST,
-                content= {
-                    "status" : ResponseEnum.PROCESSING_FAILED.value
-                }
-            )
+            return JSONResponses.BAD_REQUEST(msg= ResponseEnum.PROCESSING_FAILED.value)
 
 
 
