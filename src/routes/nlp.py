@@ -94,7 +94,7 @@ async def search_index(request: Request, project_id: str, search_request: Search
     results, signal= nlp_controller.search_vector_db_collection(
                         project= await project_model.get_project(project_id= project_id),
                         text= search_request.text,
-                        limit= search_request.length
+                        limit= search_request.limit
                     )
     
     if not results:
@@ -103,6 +103,6 @@ async def search_index(request: Request, project_id: str, search_request: Search
     return JSONResponses.OK(
         content= {
             "signal": signal,
-            "result": [result.model_dump() for result in results]
+            "results": [result.model_dump() for result in results]
         }
     )
