@@ -2,6 +2,7 @@ from .BaseController import BaseController
 from models.db_schemes import DataChunck, Project
 from stores.LLM import LLMInterface, InputTypeEnum
 from stores.vectordb import VectorDBInterface
+from models.enums import ResponseEnum
 from typing import List
 
 class NLPController(BaseController):
@@ -68,4 +69,25 @@ class NLPController(BaseController):
 
 
         return True
+    
+
+    def search_vector_db_collection(self, project: Project, text: str, limit: int = 10):
+        collection_name = self.create_collection_name(project_id= project.project_id)
+        query_vector = self.embedding_client.embed_text(
+            text= text,
+            document_type= InputTypeEnum.QUERY.value
+        )
+
+        if not query_vector or len(query_vector) == 0:
+            return None, ResponseEnum.INVALID_QUERY.value
         
+        results= self.vector_db_client.search_by_vector(
+            collection_name= collection_name,
+            vector= query_vector,
+            limit= limit
+        )
+        
+        if not results or len(results) == 0:
+            return None, ResponseEnum.SEARCH_ERROR.value
+
+        return results, ResponseEnum.SEARCH_SUCCESS.value
