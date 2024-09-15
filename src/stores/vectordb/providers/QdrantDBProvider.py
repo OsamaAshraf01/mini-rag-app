@@ -1,5 +1,5 @@
 from qdrant_client import QdrantClient, models
-from qdrant_client.conversions.common_types import ScoredPoint
+from models.db_schemes import RetrievedDocument
 from qdrant_client.models import VectorParams
 from ..VectorDBInterface import VectorDBInterface
 from ..VectorDBEnums import DistanceMethodEnums
@@ -124,12 +124,22 @@ class QdrantDBProvider(VectorDBInterface):
         return True
 
 
-    def search_by_vector(self, collection_name: str, vector: list, limit: int = 5) -> List[ScoredPoint]:
+    def search_by_vector(self, collection_name: str, vector: list, limit: int = 5) -> List[RetrievedDocument]:
         search_results = self.client.search(
             collection_name= collection_name,
             query_vector= vector,
             limit= limit
         )
 
-        return search_results
+        if not search_results or len(search_results) == 0:
+            return 0
+
+        results= [
+            RetrievedDocument(
+                text= result.payload["text"],
+                score= result.score
+            ) for result in search_results
+        ]
+
+        return results
          
