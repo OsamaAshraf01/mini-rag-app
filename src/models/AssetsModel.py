@@ -6,6 +6,7 @@ from typing import List
 from fastapi.responses import JSONResponse
 from fastapi import status
 from .enums import ResponseEnum, AssetTypeEnum
+from helpers import JSONResponses
 
 
 class AssetsModel(BaseDataModel):
@@ -32,9 +33,9 @@ class AssetsModel(BaseDataModel):
         return Asset(**document)
 
 
-    async def get_assets_by_project_id(self, asset_project_id:ObjectId, asset_types:List[str], page:int=1, page_size:int=10) -> List[Asset]:
+    async def get_poject_assets(self, project_id:ObjectId, asset_types:List[str], page:int=1, page_size:int=10) -> List[Asset]:
         total_records = await self.collection.count_documents({
-            "asset_project_id": asset_project_id,
+            "asset_project_id": project_id,
             "$or": [
                 {"asset_type" : type} for type in asset_types
             ]
@@ -44,7 +45,7 @@ class AssetsModel(BaseDataModel):
         skipped_count = (page - 1) * page_size
 
         cursor = self.collection.find({
-            "asset_project_id": asset_project_id
+            "asset_project_id": project_id
         }).skip(skipped_count).limit(page_size)
 
         assets = []
@@ -60,8 +61,8 @@ class AssetsModel(BaseDataModel):
             "asset_project_id": asset_project_id
         }) 
 
-        assets, _ = await self.get_assets_by_project_id(
-            asset_project_id=asset_project_id, 
+        assets, _ = await self.get_poject_assets(
+            project_id=asset_project_id, 
             asset_types=[AssetTypeEnum.FILE.value],
             page=1, 
             page_size=total_records
@@ -72,18 +73,9 @@ class AssetsModel(BaseDataModel):
 
     async def validate_file_id(self, asset_id):
         if not ObjectId.is_valid(asset_id):
-            return JSONResponse(
-                status_code= status.HTTP_400_BAD_REQUEST,
-                content= {
-                    "status" : ResponseEnum.INVALID_ID.value
-                }
-            )
+            return JSONResponses.BAD_REQUEST(msg= ResponseEnum.INVALID_ID.value)
+
         asset = await self.get_asset(asset_id)
 
         if asset is None:
-            return JSONResponse(
-                status_code= status.HTTP_400_BAD_REQUEST,
-                content= {
-                    "status" : ResponseEnum.FILE_NOT_FOUND.value
-                }
-            )
+            return JSONResponses.BAD_REQUEST(msg= ResponseEnum.FILE_NOT_FOUND.value)
