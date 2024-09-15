@@ -23,7 +23,7 @@ class ChunckModel(BaseDataModel):
         return result.inserted_id
     
 
-    async def insert_many_chuncks(self, chuncks:List[DataChunck], batch_size:int = 100):
+    async def insert_many_chuncks(self, chuncks:List[DataChunck], batch_size:int = 100) -> int:
         for i in range(0, len(chuncks), batch_size):
             batch = chuncks[i:i+batch_size]
             operations = [InsertOne(chunck.model_dump(by_alias=True, exclude_unset=True)) for chunck in batch]
@@ -45,13 +45,24 @@ class ChunckModel(BaseDataModel):
         return DataChunck(**record)
 
 
-    async def get_chuncks_by_project_id(self, project_id:ObjectId):
-        return self.collection.find({
-            "chunck_project_id": project_id
-        })
+    async def get_project_chuncks(self, project_id:ObjectId, page:int = 1, page_size:int = 50) -> List[DataChunck]:
+        skipped = (page - 1) * page_size
+        
+        result = self.collection.find({
+                "chunck_project_id": project_id
+        }).skip(skipped).limit(page_size)
+        
+        if not result:
+            return None
+        
+        chuncks = []
+        async for record in result:
+            chuncks.append(DataChunck(**record))
+
+        return chuncks
 
 
-    async def get_all_chuncks(self, page:int = 1, page_size:int = 10):
+    async def get_all_chuncks(self, page:int = 1, page_size:int = 10) -> List[DataChunck]:
         total_records = await self.collection.count_documents({})
         total_pages = total_records // page_size + int(total_records % page_size != 0)
         skipped_count = (page - 1) * page_size
@@ -67,7 +78,7 @@ class ChunckModel(BaseDataModel):
         return chuncks, total_pages
     
 
-    async def delete_chuncks_by_project_id(self, project_id: ObjectId):
+    async def delete_project_chuncks(self, project_id: ObjectId):
         result = await self.collection.delete_many({
             "chunck_project_id": project_id
         })
