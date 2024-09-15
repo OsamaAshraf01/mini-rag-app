@@ -11,3 +11,7 @@ class ResponseEnum(Enum):
     FILE_NOT_FOUND = "file_not_found"
 
     INVALID_ID = "invalid_file_id"
+    PROJECT_NOT_FOUND = "project_not_found"
+
+    INSERT_INTO_VECTORDB_SUCCESS = "insert_into_vectordb_success"
+    VECTORDB_COLLECTION_RETRIEVED = "vectordb_collection_retrieved"
