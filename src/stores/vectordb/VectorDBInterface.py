@@ -41,15 +41,15 @@ class VectorDBInterface(ABC):
 
     @abstractmethod
     def insert_one(self, collection_name: str, text: str, vector: list,
-                         metadata: dict = None,
-                         record_id: str = None):
+                         record_id: str,
+                         metadata: dict = None) -> bool:
         pass
 
 
     @abstractmethod
-    def insert_many(self, collection_name: List[str], texts: List[str], vectors: List[list],
-                         metadata: List[dict] = None,
-                         records_ids: List[str] = None, batch_size: int = 50):
+    def insert_many(self, collection_name: str, texts: List[str], vectors: List[list],
+                         records_ids: List[str],
+                         metadata: List[dict] = None, batch_size: int = 50):
         pass
 
 
