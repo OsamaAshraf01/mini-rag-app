@@ -61,9 +61,9 @@ async def lifespan(app: FastAPI):
 
 
     # Vector DB Factory
-    vsctor_db_factory = VectorDBProviderFactory(config= settings)
-    app.vector_db_provider = vsctor_db_factory.create(db_provider_name= settings.VECTOR_DB_BACKEND)
-    app.vector_db_provider.connect()
+    vector_db_factory = VectorDBProviderFactory(config= settings)
+    app.vector_db_client = vector_db_factory.create(db_provider_name= settings.VECTOR_DB_BACKEND)
+    app.vector_db_client.connect()
 
     yield  # Logic before yield is executed before start and Logic after it will be executed after finish.
            # That is because of @asynccontextmanager (async context manager)
