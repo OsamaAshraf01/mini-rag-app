@@ -15,3 +15,7 @@ class ResponseEnum(Enum):
 
     INSERT_INTO_VECTORDB_SUCCESS = "insert_into_vectordb_success"
     VECTORDB_COLLECTION_RETRIEVED = "vectordb_collection_retrieved"
+
+    INVALID_QUERY = "invalid_query"
+    SEARCH_ERROR = "search_error"
+    SEARCH_SUCCESS = "search_success"
