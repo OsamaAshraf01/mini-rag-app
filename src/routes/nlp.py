@@ -2,11 +2,11 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 import uuid
 from helpers import JSONResponses
-from .schemes.nlp import PushRequest
+from .schemes import PushRequest, SearchRequest
 from models import ProjectModel, ChunckModel
 from models.enums import ResponseEnum
 from controllers import NLPController
-from datetime import datetime
+from stores.LLM import InputTypeEnum
 import logging
 
 logger = logging.getLogger("uvicorn.error")
@@ -78,5 +78,31 @@ async def get_project_index_info(request: Request, project_id: str):
         content={
             "signal": ResponseEnum.VECTORDB_COLLECTION_RETRIEVED.value,
             "project_collection_info": nlp_controller.get_vector_db_collection_info(project)
+        }
+    )
+
+
+@nlp_router.post("/index/search/{project_id}")
+async def search_index(request: Request, project_id: str, search_request: SearchRequest):
+    nlp_controller = NLPController(
+        vector_db_client= request.app.vector_db_client,
+        embedding_client= request.app.embedding_client,
+        generation_client= request.app.generation_client
+    )
+    project_model = await ProjectModel.create_instance(db= request.app.db)
+
+    results, signal= nlp_controller.search_vector_db_collection(
+                        project= await project_model.get_project(project_id= project_id),
+                        text= search_request.text,
+                        limit= search_request.length
+                    )
+    
+    if not results:
+        return JSONResponses.BAD_REQUEST(msg= signal)
+    
+    return JSONResponses.OK(
+        content= {
+            "signal": signal,
+            "result": [result.model_dump() for result in results]
         }
     )
