@@ -36,7 +36,7 @@ class QdrantDBProvider(VectorDBInterface):
 
 
     def get_collection_info(self, collection_name: str) -> dict:
-        return self.client.get_collection(collection_name= collection_name)
+        return self.client.get_collection(collection_name= collection_name).model_dump()
 
     
     def delete_collection(self, collection_name: str):
@@ -48,12 +48,12 @@ class QdrantDBProvider(VectorDBInterface):
                                 embedding_size: int, 
                                 do_reset: bool = False):
         
-        if self.is_collection_exist(collection_name= collection_name):
-            self.logger.error(f"Collection '{collection_name} already exists in database.'")
-            return False
-        
         if do_reset:
             self.delete_collection(collection_name= collection_name)
+
+        if self.is_collection_exist(collection_name= collection_name):
+            self.logger.error(f"Collection '{collection_name}' already exists in database.")
+            return False
                 
         self.client.create_collection(
             collection_name= collection_name,
@@ -65,8 +65,8 @@ class QdrantDBProvider(VectorDBInterface):
 
 
     def insert_one(self, collection_name: str, text: str, vector: list,
-                         metadata: dict = None,
-                         record_id: str = None) -> bool:
+                         record_id: str,
+                         metadata: dict = None) -> bool:
         if not self.is_collection_exist(collection_name= collection_name):
             self.logger.error(f"Collection '{collection_name} doesn't exist in database.'")
             return False
@@ -76,6 +76,7 @@ class QdrantDBProvider(VectorDBInterface):
                 collection_name= collection_name,
                 records=[
                     models.Record(
+                        id= record_id,
                         vector= vector,
                         payload= {
                             "text": text,
@@ -92,8 +93,8 @@ class QdrantDBProvider(VectorDBInterface):
 
 
     def insert_many(self, collection_name: str, texts: List[str], vectors: List[list],
-                         metadata: List[dict] = None,
-                         records_ids: List[str] = None, batch_size: int = 50):
+                         records_ids: List[str],
+                         metadata: List[dict] = None, batch_size: int = 50):
         if not self.is_collection_exist(collection_name= collection_name):
             self.logger.error(f"Collection '{collection_name} doesn't exist in database.'")
             return False
@@ -104,6 +105,7 @@ class QdrantDBProvider(VectorDBInterface):
                     collection_name= collection_name,
                     records=[
                         models.Record(
+                            id= records_ids[i],
                             vector= vectors[i],
                             payload= {
                                 "text": texts[i],
