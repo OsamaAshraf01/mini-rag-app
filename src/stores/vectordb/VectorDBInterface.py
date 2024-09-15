@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List
+from qdrant_client.conversions.common_types import ScoredPoint
 
 class VectorDBInterface(ABC):
     @abstractmethod
@@ -54,6 +55,6 @@ class VectorDBInterface(ABC):
 
 
     @abstractmethod
-    def search_by_vector(self, collection_name: str, vector: list, limit: int):
+    def search_by_vector(self, collection_name: str, vector: list, limit: int) -> List[ScoredPoint]:
         pass
          
