@@ -11,7 +11,7 @@ class ChunkModel(BaseDataModel):
     indexes = DataChunk.get_indexes()
 
     def __init__(self, db):
-        self.collection_name = DataBaseEnum.CHUNCK_COLLECTION_NAME.value
+        self.collection_name = DataBaseEnum.CHUNK_COLLECTION_NAME.value
         super().__init__(db=db)
 
 
@@ -32,7 +32,7 @@ class ChunkModel(BaseDataModel):
             
             await self.collection.bulk_write(operations)
         
-        # We used bulk write to make inserting more effecient than repeated insert_one
+        # We used bulk write to make inserting more efficient than repeated insert_one
         return len(chunks)
     
     @execution_manager

@@ -41,7 +41,7 @@ async def upload_data(request: Request, project_id: str, file: UploadFile, app_s
     # use try to avoid problems
     try:
         async with aiofiles.open(file_path, "wb") as f:
-            while chunk := await file.read(app_settings.FILE_DEFAULT_CHUNCK_SIZE):
+            while chunk := await file.read(app_settings.FILE_DEFAULT_CHUNK_SIZE):
                 await f.write(chunk)
     except Exception as e:
         # use logger to avoid showing sensitive information to user. It will be in logger so the owner only
