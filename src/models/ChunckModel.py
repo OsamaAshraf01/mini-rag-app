@@ -4,6 +4,8 @@ from .db_schemes import DataChunck
 from bson.objectid import ObjectId
 from pymongo import InsertOne
 from typing import List
+from helpers.custom_assertions import AssertExistence
+from helpers import execution_manager
 
 class ChunckModel(BaseDataModel):
     indexes = DataChunck.get_indexes()
@@ -33,18 +35,18 @@ class ChunckModel(BaseDataModel):
         # We used bulk write to make inserting more effecient than repeated insert_one
         return len(chuncks)
     
-
+    @execution_manager
     async def get_chunck(self, chunck_id:str) -> DataChunck:
         record = await self.collection.find_one({
             "_id": ObjectId(chunck_id)
         })
 
-        if record is None:
-            return None
+        AssertExistence(record)
             
         return DataChunck(**record)
 
 
+    @execution_manager
     async def get_project_chuncks(self, project_id:ObjectId, page:int = 1, page_size:int = 50) -> List[DataChunck]:
         skipped = (page - 1) * page_size
         
@@ -52,8 +54,7 @@ class ChunckModel(BaseDataModel):
                 "chunck_project_id": project_id
         }).skip(skipped).limit(page_size)
         
-        if not result:
-            return None
+        AssertExistence(result)
         
         chuncks = []
         async for record in result:

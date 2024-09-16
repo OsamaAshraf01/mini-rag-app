@@ -5,6 +5,8 @@ from fastapi import status
 from fastapi.responses import JSONResponse
 from langchain_community.document_loaders import TextLoader, PyMuPDFLoader 
 from langchain_text_splitters import RecursiveCharacterTextSplitter 
+from helpers.custom_assertions import AssertExistence
+from helpers import execution_manager
 import os
 from models import ProcessingEnum
 
@@ -36,11 +38,11 @@ class ProcessController(BaseController):
         return None
     
 
+    @execution_manager
     def get_file_content(self, file_id:str):
         loader = self.get_file_loader(file_id=file_id)
 
-        if loader is None:
-            return None
+        AssertExistence(loader)
         
         return loader.load()
     

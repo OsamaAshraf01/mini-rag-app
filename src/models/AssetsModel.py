@@ -6,7 +6,8 @@ from typing import List
 from fastapi.responses import JSONResponse
 from fastapi import status
 from .enums import ResponseEnum, AssetTypeEnum
-from helpers import JSONResponses
+from helpers import JSONResponses, execution_manager
+from helpers.custom_assertions import AssertExistence
 
 
 class AssetsModel(BaseDataModel):
@@ -22,13 +23,13 @@ class AssetsModel(BaseDataModel):
         return result.inserted_id
     
 
+    @execution_manager
     async def get_asset(self, asset_id:str) -> Asset:
         document = await self.collection.find_one({
             "_id": ObjectId(asset_id)
         })
 
-        if document is None:
-            return None
+        AssertExistence(document)
 
         return Asset(**document)
 
