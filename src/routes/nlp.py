@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 import uuid
 from helpers import JSONResponses
 from .schemes import PushRequest, SearchRequest
-from models import ProjectModel, ChunckModel
+from models import ProjectModel, ChunkModel
 from models.enums import ResponseEnum
 from controllers import NLPController
 from stores.LLM import InputTypeEnum
@@ -19,7 +19,7 @@ nlp_router = APIRouter(
 @nlp_router.post("/index/push/{project_id}")
 async def push(request: Request, project_id: str, push_request: PushRequest):
     project_model = await ProjectModel.create_instance(db= request.app.db)
-    chunck_model = await ChunckModel.create_instance(db= request.app.db)
+    chunk_model = await ChunkModel.create_instance(db= request.app.db)
     nlp_controller = NLPController(
         vector_db_client= request.app.vector_db_client,
         embedding_client= request.app.embedding_client,
@@ -32,24 +32,24 @@ async def push(request: Request, project_id: str, push_request: PushRequest):
     if project is None:
         return JSONResponses.BAD_REQUEST(msg= ResponseEnum.PROJECT_NOT_FOUND.value)
     
-    # get all project chuncks
-    chuncks = []
+    # get all project chunks
+    chunks = []
     page_no = 1
     while True:
-        page_chuncks = await chunck_model.get_project_chuncks(project_id= project.id, page= page_no)
-        if page_chuncks is None or len(page_chuncks) == 0:
+        page_chunks = await chunk_model.get_project_chunks(project_id= project.id, page= page_no)
+        if page_chunks is None or len(page_chunks) == 0:
             break
-        chuncks += page_chuncks
+        chunks += page_chunks
         page_no += 1
 
     records_ids = [
         str(uuid.uuid4())
-        for i in range(len(chuncks))
+        for i in range(len(chunks))
     ]
 
     nlp_controller.index_vector_into_database(
         project= project, 
-        chuncks= chuncks, 
+        chunks= chunks, 
         do_reset= do_reset,
         records_ids= records_ids
     )
@@ -58,7 +58,7 @@ async def push(request: Request, project_id: str, push_request: PushRequest):
     return JSONResponses.OK(
         content={
             "signal": ResponseEnum.INSERT_INTO_VECTORDB_SUCCESS.value,
-            "inserted_items_count": len(chuncks)
+            "inserted_items_count": len(chunks)
         }
     )
 

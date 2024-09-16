@@ -1,87 +1,87 @@
 from .BaseDataModel import BaseDataModel
 from .enums.DataBaseEnum import DataBaseEnum
-from .db_schemes import DataChunck
+from .db_schemes import DataChunk
 from bson.objectid import ObjectId
 from pymongo import InsertOne
 from typing import List
 from helpers.custom_assertions import AssertExistence
 from helpers import execution_manager
 
-class ChunckModel(BaseDataModel):
-    indexes = DataChunck.get_indexes()
+class ChunkModel(BaseDataModel):
+    indexes = DataChunk.get_indexes()
 
     def __init__(self, db):
         self.collection_name = DataBaseEnum.CHUNCK_COLLECTION_NAME.value
         super().__init__(db=db)
 
 
-    async def insert_chunck(self, chunck:DataChunck) -> ObjectId:
-        ''' This function is to insert a new chunck into the database
+    async def insert_chunk(self, chunk:DataChunk) -> ObjectId:
+        ''' This function is to insert a new chunk into the database
             and returning an object of type ObjectId.
-            This function should be called only if chunck is not found in the database.
+            This function should be called only if chunk is not found in the database.
         '''
 
-        result = await self.collection.insert_one(chunck.model_dump(by_alias=True, exclude_unset=True)) # = chunck.dict()
+        result = await self.collection.insert_one(chunk.model_dump(by_alias=True, exclude_unset=True)) # = chunk.dict()
         return result.inserted_id
     
 
-    async def insert_many_chuncks(self, chuncks:List[DataChunck], batch_size:int = 100) -> int:
-        for i in range(0, len(chuncks), batch_size):
-            batch = chuncks[i:i+batch_size]
-            operations = [InsertOne(chunck.model_dump(by_alias=True, exclude_unset=True)) for chunck in batch]
+    async def insert_many_chunks(self, chunks:List[DataChunk], batch_size:int = 100) -> int:
+        for i in range(0, len(chunks), batch_size):
+            batch = chunks[i:i+batch_size]
+            operations = [InsertOne(chunk.model_dump(by_alias=True, exclude_unset=True)) for chunk in batch]
             
             await self.collection.bulk_write(operations)
         
         # We used bulk write to make inserting more effecient than repeated insert_one
-        return len(chuncks)
+        return len(chunks)
     
     @execution_manager
-    async def get_chunck(self, chunck_id:str) -> DataChunck:
+    async def get_chunk(self, chunk_id:str) -> DataChunk:
         record = await self.collection.find_one({
-            "_id": ObjectId(chunck_id)
+            "_id": ObjectId(chunk_id)
         })
 
         AssertExistence(record)
             
-        return DataChunck(**record)
+        return DataChunk(**record)
 
 
     @execution_manager
-    async def get_project_chuncks(self, project_id:ObjectId, page:int = 1, page_size:int = 50) -> List[DataChunck]:
+    async def get_project_chunks(self, project_id:ObjectId, page:int = 1, page_size:int = 50) -> List[DataChunk]:
         skipped = (page - 1) * page_size
         
         result = self.collection.find({
-                "chunck_project_id": project_id
+                "chunk_project_id": project_id
         }).skip(skipped).limit(page_size)
         
         AssertExistence(result)
         
-        chuncks = []
+        chunks = []
         async for record in result:
-            chuncks.append(DataChunck(**record))
+            chunks.append(DataChunk(**record))
 
-        return chuncks
+        return chunks
 
 
-    async def get_all_chuncks(self, page:int = 1, page_size:int = 10) -> List[DataChunck]:
+    async def get_all_chunks(self, page:int = 1, page_size:int = 10) -> List[DataChunk]:
         total_records = await self.collection.count_documents({})
         total_pages = total_records // page_size + int(total_records % page_size != 0)
         skipped_count = (page - 1) * page_size
 
         cursor = self.collection.find().skip(skipped_count).limit(page_size)
 
-        chuncks = []
+        chunks = []
         async for document in cursor:
-            chuncks.append(
-                DataChunck(**document)
+            chunks.append(
+                DataChunk(**document)
             )
 
-        return chuncks, total_pages
+        return chunks, total_pages
     
 
-    async def delete_project_chuncks(self, project_id: ObjectId):
+    async def delete_project_chunks(self, project_id: ObjectId):
         result = await self.collection.delete_many({
-            "chunck_project_id": project_id
+            "chunk_project_id": project_id
         })
 
         return result.deleted_count

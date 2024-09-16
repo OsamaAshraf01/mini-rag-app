@@ -1,5 +1,5 @@
 from .BaseController import BaseController
-from models.db_schemes import DataChunck, Project
+from models.db_schemes import DataChunk, Project
 from stores.LLM import LLMInterface, InputTypeEnum
 from stores.vectordb import VectorDBInterface
 from models.enums import ResponseEnum
@@ -32,16 +32,16 @@ class NLPController(BaseController):
         return collection_info
 
     
-    def index_vector_into_database(self, project: Project, chuncks: List[DataChunck],
+    def index_vector_into_database(self, project: Project, chunks: List[DataChunk],
                                          records_ids: List[str],
                                          do_reset: bool = False):
         
         if do_reset:
             self.reset_vector_db_collection(project= project)
         
-        # Mangage Chuncks' Data
-        metadata = [chunck.chunck_metadata for chunck in chuncks]
-        texts = [chunck.chunck_text for chunck in chuncks]
+        # Mangage Chunks' Data
+        metadata = [chunk.chunk_metadata for chunk in chunks]
+        texts = [chunk.chunk_text for chunk in chunks]
         vectors = [
             self.embedding_client.embed_text(
                 text=text, 
